@@ -1,0 +1,87 @@
+{
+  "cw_host": {
+    "display_name": "ConnectWise RMM API region",
+    "description": "Asio OpenAPI host for your ConnectWise RMM region.",
+    "type": "dropdown",
+    "options": [
+      "openapi.service.itsupport247.net",
+      "openapi.service.euplatform.connectwise.com",
+      "openapi.service.auplatform.connectwise.com"
+    ],
+    "default_value": "openapi.service.itsupport247.net",
+    "required": true
+  },
+  "cw_client_id": {
+    "display_name": "ConnectWise RMM client ID",
+    "description": "Client ID of the API client created in ConnectWise RMM (Settings > Integrations > API Clients).",
+    "type": "text",
+    "required": true
+  },
+  "cw_client_secret": {
+    "display_name": "ConnectWise RMM client secret",
+    "description": "Client secret for the API client above. It has to travel in the token request body, which secure parameters can't be used in, so it is stored as a regular installation parameter.",
+    "type": "text",
+    "required": true
+  },
+  "cw_scope": {
+    "display_name": "ConnectWise RMM token scope",
+    "description": "OAuth scopes requested for the API client, space separated. Read and Update are required (Platform - Tickets - Read / Update). Add platform.companies.read to include company names on imported tickets.",
+    "type": "text",
+    "default_value": "platform.tickets.read platform.tickets.update",
+    "required": true
+  },
+  "fs_domain": {
+    "display_name": "Freshservice domain",
+    "description": "Your Freshservice host, e.g. acme.freshservice.com",
+    "type": "text",
+    "required": true
+  },
+  "fs_api_key": {
+    "display_name": "Freshservice API key",
+    "description": "API key of the agent the app acts as (Profile settings > API key).",
+    "type": "text",
+    "secure": true,
+    "required": true
+  },
+  "close_after_import": {
+    "display_name": "Close tickets in ConnectWise RMM after import",
+    "description": "When on, a ConnectWise ticket is set to Closed once its Freshservice ticket has been created, and Freshservice becomes the place to work it. Resolutions in ConnectWise only sync to Freshservice for tickets left open.",
+    "type": "checkbox",
+    "default_value": true
+  },
+  "resolve_sync": {
+    "display_name": "Resolve Freshservice tickets when resolved in ConnectWise RMM",
+    "type": "checkbox",
+    "default_value": true
+  },
+  "poll_interval_minutes": {
+    "display_name": "Poll interval (minutes)",
+    "description": "How often to pull new tickets from ConnectWise RMM.",
+    "type": "dropdown",
+    "options": [
+      "5",
+      "10",
+      "15",
+      "30",
+      "60"
+    ],
+    "default_value": "5",
+    "required": true
+  },
+  "default_requester_email": {
+    "display_name": "Default requester email",
+    "description": "Requester for imported tickets that have no contact email in ConnectWise RMM.",
+    "type": "text",
+    "required": true
+  },
+  "fs_group_id": {
+    "display_name": "Freshservice group ID (optional)",
+    "description": "Assign imported tickets to this agent group.",
+    "type": "text"
+  },
+  "webhook_secret": {
+    "display_name": "Webhook shared secret (optional)",
+    "description": "If set, events posted to the app's external event URL must send this value in an X-Webhook-Secret header or a \"secret\" body field.",
+    "type": "text"
+  }
+}

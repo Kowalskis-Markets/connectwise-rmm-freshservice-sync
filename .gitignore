@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.fdk/
+coverage/
+log/
+*.zip
+.DS_Store
+.report.json
+.usage.json
+.env*
+*.pem

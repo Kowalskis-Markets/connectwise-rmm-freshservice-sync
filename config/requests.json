@@ -1,0 +1,146 @@
+{
+  "cwToken": {
+    "schema": {
+      "method": "POST",
+      "host": "<%= iparam.cw_host %>",
+      "path": "/v1/token",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "options": {
+      "maxAttempts": 2,
+      "retryDelay": 1000
+    }
+  },
+  "cwStatuses": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= iparam.cw_host %>",
+      "path": "/api/platform/v1/service/ticketing/statuses",
+      "headers": {
+        "Authorization": "Bearer <%= context.token %>",
+        "Accept": "application/json"
+      }
+    },
+    "options": {
+      "maxAttempts": 2,
+      "retryDelay": 1000
+    }
+  },
+  "cwListTickets": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= iparam.cw_host %>",
+      "path": "/api/platform/v2/service/ticketing/tickets",
+      "query": {
+        "statusIds": "<%= context.statusIds %>",
+        "updatedAtFrom": "<%= context.updatedAtFrom %>",
+        "sortBy": "updatedAt",
+        "sortDir": "asc",
+        "pageNum": "<%= context.pageNum %>",
+        "pageSize": "<%= context.pageSize %>"
+      },
+      "headers": {
+        "Authorization": "Bearer <%= context.token %>",
+        "Accept": "application/json"
+      }
+    },
+    "options": {
+      "maxAttempts": 2,
+      "retryDelay": 1000
+    }
+  },
+  "cwGetTicket": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= iparam.cw_host %>",
+      "path": "/api/platform/v2/service/ticketing/tickets/<%= context.id %>",
+      "headers": {
+        "Authorization": "Bearer <%= context.token %>",
+        "Accept": "application/json"
+      }
+    },
+    "options": {
+      "maxAttempts": 2,
+      "retryDelay": 1000
+    }
+  },
+  "cwUpdateTicket": {
+    "schema": {
+      "method": "PATCH",
+      "host": "<%= iparam.cw_host %>",
+      "path": "/api/platform/v2/service/ticketing/tickets/<%= context.id %>",
+      "headers": {
+        "Authorization": "Bearer <%= context.token %>",
+        "Content-Type": "application/json"
+      }
+    },
+    "options": {
+      "maxAttempts": 2,
+      "retryDelay": 1000
+    }
+  },
+  "cwGetCompany": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= iparam.cw_host %>",
+      "path": "/api/platform/v1/company/companies/<%= context.id %>",
+      "headers": {
+        "Authorization": "Bearer <%= context.token %>",
+        "Accept": "application/json"
+      }
+    }
+  },
+  "fsListTickets": {
+    "schema": {
+      "method": "GET",
+      "host": "<%= iparam.fs_domain %>",
+      "path": "/api/v2/tickets",
+      "query": {
+        "per_page": "1"
+      },
+      "headers": {
+        "Authorization": "Basic <%= encode(iparam.fs_api_key) %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "fsCreateTicket": {
+    "schema": {
+      "method": "POST",
+      "host": "<%= iparam.fs_domain %>",
+      "path": "/api/v2/tickets",
+      "headers": {
+        "Authorization": "Basic <%= encode(iparam.fs_api_key) %>",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "fsUpdateTicket": {
+    "schema": {
+      "method": "PUT",
+      "host": "<%= iparam.fs_domain %>",
+      "path": "/api/v2/tickets/<%= context.id %>",
+      "headers": {
+        "Authorization": "Basic <%= encode(iparam.fs_api_key) %>",
+        "Content-Type": "application/json"
+      }
+    },
+    "options": {
+      "maxAttempts": 2,
+      "retryDelay": 1000
+    }
+  },
+  "fsAddNote": {
+    "schema": {
+      "method": "POST",
+      "host": "<%= iparam.fs_domain %>",
+      "path": "/api/v2/tickets/<%= context.id %>/notes",
+      "headers": {
+        "Authorization": "Basic <%= encode(iparam.fs_api_key) %>",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}

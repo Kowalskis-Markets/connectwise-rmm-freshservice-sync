@@ -1,0 +1,15 @@
+{
+  "account_id": "12345",
+  "event": "onExternalEvent",
+  "region": "US",
+  "timestamp": 1760630400000,
+  "headers": { "content-type": "application/json" },
+  "data": {
+    "action": "Close",
+    "ticket": {
+      "ticketId": "100234",
+      "summary": "Disk space low on SRV-FILE01",
+      "status": "Closed"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "connectwise-rmm-freshservice-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Freshservice app that imports ConnectWise RMM tickets and syncs resolutions",
+  "scripts": {
+    "test": "vitest run",
+    "fdk-unit-test": "vitest run --coverage"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.1.11",
+    "vitest": "4.1.11"
+  }
+}

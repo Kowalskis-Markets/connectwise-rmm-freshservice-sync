@@ -1,0 +1,7 @@
+{
+  "account_id": "12345",
+  "event": "onScheduledEvent",
+  "region": "US",
+  "timestamp": 1760630400000,
+  "data": {}
+}

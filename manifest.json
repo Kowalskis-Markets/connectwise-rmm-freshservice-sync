@@ -1,0 +1,46 @@
+{
+  "platform-version": "3.0",
+  "modules": {
+    "common": {
+      "events": {
+        "onAppInstall": {
+          "handler": "onAppInstallHandler"
+        },
+        "onAppUninstall": {
+          "handler": "onAppUninstallHandler"
+        },
+        "onScheduledEvent": {
+          "handler": "onScheduledEventHandler"
+        },
+        "onExternalEvent": {
+          "handler": "onExternalEventHandler"
+        }
+      },
+      "requests": {
+        "cwToken": {},
+        "cwStatuses": {},
+        "cwListTickets": {},
+        "cwGetTicket": {},
+        "cwUpdateTicket": {},
+        "cwGetCompany": {},
+        "fsListTickets": {},
+        "fsCreateTicket": {},
+        "fsUpdateTicket": {},
+        "fsAddNote": {}
+      }
+    },
+    "service_ticket": {}
+  },
+  "installation": {
+    "scopes": [
+      "account"
+    ]
+  },
+  "engines": {
+    "node": "24.11.0",
+    "fdk": "10.1.10"
+  },
+  "scripts": {
+    "fdk-unit-test": "vitest run --coverage"
+  }
+}
