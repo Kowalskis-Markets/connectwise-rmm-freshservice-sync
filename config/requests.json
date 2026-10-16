@@ -51,21 +51,6 @@
       "retryDelay": 1000
     }
   },
-  "cwGetTicket": {
-    "schema": {
-      "method": "GET",
-      "host": "<%= iparam.cw_host %>",
-      "path": "/api/platform/v2/service/ticketing/tickets/<%= context.id %>",
-      "headers": {
-        "Authorization": "Bearer <%= context.token %>",
-        "Accept": "application/json"
-      }
-    },
-    "options": {
-      "maxAttempts": 2,
-      "retryDelay": 1000
-    }
-  },
   "cwUpdateTicket": {
     "schema": {
       "method": "PATCH",

@@ -1,7 +1,7 @@
 'use strict';
 
 // server.js runs the way the FDK runtime runs it: in a vm context whose globals are the platform
-// APIs ($request, $db, $schedule, renderData, generateTargetUrl), a console without warn(), and
+// APIs ($request, $db, $schedule, renderData), a console without warn(), and
 // a require() that evaluates local files wrapped in `var exports = {}` with no `module` object.
 
 const assert = require('node:assert/strict');
@@ -37,7 +37,6 @@ function loadServer({ cwTickets = [], schedule = {} } = {}) {
       update: async (s) => (schedule.update || (() => calls.schedule.push(['update', s])))(s),
       delete: async (s) => (schedule.delete || (() => calls.schedule.push(['delete', s])))(s)
     },
-    generateTargetUrl: async () => 'https://hooks.example.com/abc123',
     renderData: (arg) => calls.renderData.push(arg)
   };
   const context = vm.createContext(sandbox);
@@ -175,17 +174,4 @@ test('a failed interval update does not stop the poll', async () => {
   const { handlers, backends } = loadServer({ cwTickets: [ticket(1)], schedule: { update: () => { throw new Error('nope'); } } });
   await handlers.onScheduledEventHandler({ iparams: IPARAMS });
   assert.equal(backends.fs.size, 1);
-});
-
-test('external event resolves the mapped ticket and never throws', async () => {
-  const { handlers, backends } = loadServer({ cwTickets: [ticket(5)] });
-  await handlers.onScheduledEventHandler({ iparams: { ...IPARAMS, close_after_import: false } });
-
-  backends.failures.fsUpdateTicket = httpError(500, 'boom');
-  await handlers.onExternalEventHandler({ iparams: IPARAMS, data: { action: 'Close', ticketId: '5' }, headers: {} });
-  const [fsTicket] = backends.fs.values();
-  assert.equal(fsTicket.status, 2);
-
-  await handlers.onExternalEventHandler({ iparams: IPARAMS, data: { action: 'Close', ticketId: '5' }, headers: {} });
-  assert.equal(fsTicket.status, 4);
 });

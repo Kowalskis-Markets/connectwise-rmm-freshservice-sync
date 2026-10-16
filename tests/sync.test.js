@@ -72,21 +72,15 @@ test('a failed close is retried on the next poll without re-importing', async ()
   assert.equal(b.cw.get('1').status.name, 'Closed');
 });
 
-test('the close webhook caused by the sync does not resolve the new Freshservice ticket', async () => {
+test('the resolve pass does not resolve tickets the sync closed itself', async () => {
   const b = fakeBackends({ cwTickets: [ticket(1)] });
   const env = makeEnv(b);
-  // ConnectWise fires its close webhook while the close request is still in flight.
-  const invoke = b.request.invokeTemplate;
-  let webhook;
-  b.request.invokeTemplate = async (name, opts) => {
-    const res = await invoke(name, opts);
-    if (name === 'cwUpdateTicket') webhook = await sync.handleWebhook(env, { action: 'Close', ticketId: '1' }, {});
-    return res;
-  };
 
   await sync.poll(env);
+  const second = await sync.poll(env);
 
-  assert.deepEqual(webhook, { ignored: 'closed by sync' });
+  assert.equal(b.cw.get('1').status.name, 'Closed');
+  assert.equal(second.resolved, 0);
   const m = await store.getMapping(env, '1');
   assert.equal(b.fs.get(m.fsId).status, 2);
   assert.equal(b.calls.includes('fsUpdateTicket'), false);
@@ -106,7 +100,10 @@ test('poll resolves Freshservice tickets whose ConnectWise ticket was resolved',
   assert.equal(b.notes.length, 1);
   assert.match(b.notes[0].body, /ticket 5001/);
   assert.equal(b.fs.get((await store.getMapping(env, '2')).fsId).status, 2);
-  assert.equal(b.calls.includes('cwGetTicket'), false);
+
+  const again = await sync.poll(env);
+  assert.equal(again.resolved, 0);
+  assert.equal(b.notes.length, 1);
 });
 
 test('poll does not resolve when resolve_sync is off', async () => {
@@ -119,50 +116,6 @@ test('poll does not resolve when resolve_sync is off', async () => {
 
   assert.equal(result.resolved, 0);
   assert.equal(b.calls.includes('fsUpdateTicket'), false);
-});
-
-test('webhook close resolves an open ticket in Freshservice', async () => {
-  const b = fakeBackends({ cwTickets: [ticket(7)] });
-  const env = makeEnv(b, { close_after_import: false });
-  await sync.poll(env);
-
-  const out = await sync.handleWebhook(env, { action: 'Close', ticket: { ticketId: '7' } }, {});
-
-  assert.deepEqual(out, { resolved: '7' });
-  const m = await store.getMapping(env, '7');
-  assert.equal(m.status, 'resolved');
-  assert.equal(b.fs.get(m.fsId).status, 4);
-
-  const again = await sync.handleWebhook(env, { action: 'Close', ticket: { ticketId: '7' } }, {});
-  assert.deepEqual(again, { ignored: 'already resolved' });
-});
-
-test('webhook for an unknown ticket is ignored', async () => {
-  const b = fakeBackends();
-  const env = makeEnv(b);
-  const out = await sync.handleWebhook(env, { action: 'Close', ticketId: '999' }, {});
-  assert.deepEqual(out, { ignored: 'unknown ticket 999' });
-  assert.equal(b.calls.includes('fsUpdateTicket'), false);
-});
-
-test('webhook create event imports immediately', async () => {
-  const b = fakeBackends({ cwTickets: [ticket(11)] });
-  const env = makeEnv(b);
-  const out = await sync.handleWebhook(env, { action: 'Create', ticket: { ticketId: '11' } }, {});
-  assert.equal(out.imported, 1);
-  assert.equal(out.closed, 1);
-});
-
-test('webhook secret is enforced when configured', async () => {
-  const b = fakeBackends({ cwTickets: [ticket(1)] });
-  const env = makeEnv(b, { webhook_secret: 's3cret', close_after_import: false });
-  await sync.poll(env);
-
-  assert.deepEqual(await sync.handleWebhook(env, { action: 'Close', ticketId: '1' }, {}), { ignored: 'bad secret' });
-  assert.deepEqual(
-    await sync.handleWebhook(env, { action: 'Close', ticketId: '1' }, { 'x-webhook-secret': 's3cret' }),
-    { resolved: '1' }
-  );
 });
 
 test('a 429 stops the run without throwing, and the next run continues', async () => {
@@ -326,30 +279,17 @@ test('the resolve pass ignores tickets that were closed before it first ran', as
   assert.ok(await store.getCursor(env, 'resolve'));
 });
 
-test('webhook ignores payloads without a ticket, unknown events, and disabled resolve sync', async () => {
-  const b = fakeBackends({ cwTickets: [ticket(3)] });
-  const env = makeEnv(b, { close_after_import: false });
-  await sync.poll(env);
-
-  assert.deepEqual(await sync.handleWebhook(env, { action: 'Close' }, {}), { ignored: 'no ticket id' });
-  assert.deepEqual(await sync.handleWebhook(env, undefined, undefined), { ignored: 'no ticket id' });
-  assert.deepEqual(await sync.handleWebhook(env, { action: 'Comment', ticketId: '3' }, {}), {
-    ignored: 'unhandled event'
-  });
-
-  env.iparams.resolve_sync = 'false';
-  assert.deepEqual(await sync.handleWebhook(env, { action: 'Close', ticketId: '3' }, {}), {
-    ignored: 'resolve sync disabled'
-  });
-});
-
 test('resolve still succeeds when the note cannot be added', async () => {
   const b = fakeBackends({ cwTickets: [ticket(4)] });
   const env = makeEnv(b, { close_after_import: false });
   await sync.poll(env);
   b.failures.fsAddNote = httpError(500, 'notes down');
+  b.setStatus('4', 'Closed');
 
-  assert.deepEqual(await sync.handleWebhook(env, { action: 'Close', ticketId: '4' }, {}), { resolved: '4' });
+  const result = await sync.poll(env);
+
+  assert.equal(result.resolved, 1);
+  assert.equal(b.fs.get((await store.getMapping(env, '4')).fsId).status, 4);
   assert.equal(b.notes.length, 0);
 });
 

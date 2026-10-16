@@ -66,10 +66,6 @@ function fakeBackends({ cwTickets = [], companies = { 'c-1': { id: 'c-1', name: 
       // Like the real API, a page past the end reports a total of 0.
       return { tickets: page, totalCount: page.length ? matching.length : 0 };
     },
-    cwGetTicket: ({ id }) => {
-      if (!cw.has(id)) throw httpError(404);
-      return cw.get(id);
-    },
     cwUpdateTicket: ({ id }, patch) => {
       if (!cw.has(id)) throw httpError(404);
       for (const op of patch) {

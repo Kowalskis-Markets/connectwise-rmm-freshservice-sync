@@ -14,10 +14,8 @@ const STATUSES_TTL_MS = 60 * 60 * 1000;
 const CLOSED_CATEGORY = 'Closed';
 const PREFERRED_CLOSE_STATUS = 'closed';
 const EPOCH = '2000-01-01T00:00:00Z';
-// Only used for webhook payloads, which may carry a status name rather than an id.
+// Fallback for tickets that carry a status name but no status id.
 const RESOLVED_STATUS_NAMES = new Set(['resolved', 'closed', 'completed', 'complete', 'cancelled']);
-const RESOLVE_ACTIONS = new Set(['close', 'closed', 'resolve', 'resolved', 'ticket.closed', 'ticket.resolved']);
-const CREATE_ACTIONS = new Set(['create', 'created', 'ticket.created']);
 
 async function cachedToken(env) {
   const cached = await store.get(env, TOKEN_KEY);
@@ -142,15 +140,6 @@ function hasMorePages(body, rows, page, pageSize) {
   return Number.isFinite(total) ? page * pageSize < total : rows.length >= pageSize;
 }
 
-async function getTicket(env, id) {
-  try {
-    return normalize(await authed(env, 'cwGetTicket', { id }));
-  } catch (err) {
-    if (err && err.status === 404) return null;
-    throw err;
-  }
-}
-
 async function closeTicket(env, id) {
   const { closeTo } = await getStatuses(env);
   try {
@@ -185,30 +174,13 @@ async function lookupCompanyName(env, companyId) {
   }
 }
 
-// Interprets a webhook payload. The Platform API has no ticket webhooks; this handles anything
-// that posts ticket events to the app's external event URL.
-function parseWebhook(data) {
-  const payload = data || {};
-  const ticket = normalize(pick(payload, 'ticket', 'data.ticket', 'data')) || normalize(payload);
-  if (!ticket) return { id: undefined, ticket: null, resolved: false, created: false };
-  const action = String(pick(payload, 'action', 'event', 'eventType', 'type') || '').toLowerCase();
-  return {
-    id: ticket.id,
-    ticket,
-    resolved: RESOLVE_ACTIONS.has(action) || RESOLVED_STATUS_NAMES.has(ticket.status.toLowerCase()),
-    created: CREATE_ACTIONS.has(action)
-  };
-}
-
 Object.assign(exports, {
   getToken,
   getStatuses,
   listTickets,
-  getTicket,
   closeTicket,
   getCompanyName,
   normalize,
   isClosed,
-  parseWebhook,
   summarizeStatuses
 });

@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { toFreshservice, mapPriority } = require('../server/lib/mapping');
-const { normalize, parseWebhook } = require('../server/lib/connectwise');
+const { normalize } = require('../server/lib/connectwise');
 
 test('mapPriority handles names, CW numbers, and unknowns', () => {
   assert.equal(mapPriority('Critical'), 4);
@@ -63,16 +63,4 @@ test('normalize reads the Platform API ticket shape', () => {
   assert.equal(t.companyId, 'c-9');
   assert.equal(t.siteId, 'site-2');
   assert.equal(t.updatedAt, '2026-10-16T11:00:00Z');
-});
-
-test('parseWebhook recognises close events and nested tickets', () => {
-  assert.deepEqual(
-    { ...parseWebhook({ action: 'Close', ticket: { id: '9' } }), ticket: undefined },
-    { id: '9', ticket: undefined, resolved: true, created: false }
-  );
-  assert.equal(parseWebhook({ ticketId: 9, status: 'Resolved' }).resolved, true);
-  assert.equal(parseWebhook({ id: 9, status: { name: 'Closed' } }).resolved, true);
-  assert.equal(parseWebhook({ id: 9, status: { name: 'Open' } }).resolved, false);
-  assert.equal(parseWebhook({ action: 'Create', ticket: { id: 5 } }).created, true);
-  assert.equal(parseWebhook({}).id, undefined);
 });

@@ -129,14 +129,11 @@ test('company names are looked up once, cached, and skipped when not permitted',
   assert.equal(b.calls.filter((c) => c === 'cwGetCompany').length, 2);
 });
 
-test('getTicket and closeTicket treat 404 as gone but rethrow other errors', async () => {
+test('closeTicket treats 404 as gone but rethrows other errors', async () => {
   const b = fakeBackends();
   const env = makeEnv(b);
-  assert.equal(await cw.getTicket(env, 'missing'), null);
   await cw.closeTicket(env, 'missing');
 
-  b.failures.cwGetTicket = httpError(500);
-  await assert.rejects(cw.getTicket(env, 'x'), (e) => e.status === 500);
   b.failures.cwUpdateTicket = httpError(403);
   await assert.rejects(cw.closeTicket(env, 'x'), (e) => e.status === 403);
 });

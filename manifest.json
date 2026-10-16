@@ -11,16 +11,12 @@
         },
         "onScheduledEvent": {
           "handler": "onScheduledEventHandler"
-        },
-        "onExternalEvent": {
-          "handler": "onExternalEventHandler"
         }
       },
       "requests": {
         "cwToken": {},
         "cwStatuses": {},
         "cwListTickets": {},
-        "cwGetTicket": {},
         "cwUpdateTicket": {},
         "cwGetCompany": {},
         "fsListTickets": {},

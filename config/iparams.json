@@ -78,10 +78,5 @@
     "display_name": "Freshservice group ID (optional)",
     "description": "Assign imported tickets to this agent group.",
     "type": "text"
-  },
-  "webhook_secret": {
-    "display_name": "Webhook shared secret (optional)",
-    "description": "If set, events posted to the app's external event URL must send this value in an X-Webhook-Secret header or a \"secret\" body field.",
-    "type": "text"
   }
 }

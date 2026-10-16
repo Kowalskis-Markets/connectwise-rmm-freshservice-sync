@@ -24,7 +24,7 @@ Imported Freshservice tickets get:
 
 > **The first poll imports every open ConnectWise ticket.** With **Close after import** on, it also closes all of them in ConnectWise. If that isn't what you want, install with **Close after import** off and check the results first.
 
-ConnectWise has no ticket delete scope, which is why the app closes tickets instead of deleting them. The Platform API also has no ticket webhooks, so everything runs on the poll. The app accepts optional ticket create/close events posted to its external event URL (logged at install) from anything else that can send them.
+ConnectWise has no ticket delete scope, which is why the app closes tickets instead of deleting them. The Platform API also has no ticket webhooks, so everything runs on the poll.
 
 ## Setup
 
@@ -45,7 +45,6 @@ ConnectWise has no ticket delete scope, which is why the app closes tickets inst
 | Poll interval | 5 minutes minimum (an FDK limit). Changes take effect on the next poll. |
 | Default requester email | Requester for every imported ticket |
 | Group ID | Optional Freshservice agent group for imported tickets |
-| Webhook shared secret | Optional. When set, external event calls must send it as the `X-Webhook-Secret` header or a `secret` body field. |
 
 Installation requests a ConnectWise token, lists one ticket, and reads from Freshservice. If any of these fail, install stops and shows the error, so a wrong region, missing scope or bad key surfaces immediately. The first poll runs about a minute after install.
 
@@ -80,10 +79,10 @@ Server code runs in FDK's sandbox, not in plain Node:
 config/iparams.json         install settings
 config/requests.json        every HTTP endpoint (ConnectWise + Freshservice request templates)
 server/server.js            FDK event handlers, poll schedule
-server/lib/connectwise.js   token caching, statuses, ticket list/get/close, company names, field mapping
+server/lib/connectwise.js   token caching, statuses, ticket list/close, company names, field mapping
 server/lib/freshservice.js  create / resolve / note
 server/lib/mapping.js       ConnectWise ticket → Freshservice payload, priority mapping
-server/lib/sync.js          import and resolve passes, external events
+server/lib/sync.js          import and resolve passes
 server/lib/store.js         $db keys (ticket mappings, scan cursors, token, statuses, company names, schedule)
 tests/                      unit tests with fake $db / $request backends
 ```
@@ -98,7 +97,6 @@ Built against the ConnectWise Platform APIs OpenAPI spec (v3.0.4). Paths are in 
 | Closed statuses | `GET /api/platform/v1/service/ticketing/statuses` → `category == "Closed"` (cached for an hour) |
 | Open tickets | `GET /api/platform/v2/service/ticketing/tickets?statusIds=[notIn],<closed ids>&updatedAtFrom=<cursor>&sortBy=updatedAt&sortDir=asc&pageNum&pageSize` |
 | Recently closed tickets | Same, with `statusIds=<closed ids>` |
-| One ticket | `GET /api/platform/v2/service/ticketing/tickets/{id}` |
 | Close | `PATCH /api/platform/v2/service/ticketing/tickets/{id}` with `[{"op":"replace","path":"/status","value":{"id":…,"name":…}}]` |
 | Company name | `GET /api/platform/v1/company/companies/{id}` (optional) |
 

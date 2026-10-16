@@ -56,8 +56,8 @@ async function checkConnections(env) {
   }
 }
 
-// Closing a ticket may make ConnectWise report a close event. The mapping is marked closedBySync
-// before the update so that event is ignored instead of resolving the Freshservice ticket just created.
+// The mapping is marked closedBySync before the update so the resolve pass, which will see the
+// ticket in a Closed status, skips it instead of resolving the Freshservice ticket just created.
 // A failed close throws, so the scan cursor stops there and the close is retried next poll.
 async function closeInConnectWise(env, cwId, mapping, result) {
   await store.setMapping(env, cwId, { ...mapping, closedBySync: true });
@@ -89,20 +89,20 @@ async function importOne(env, ticket, result) {
   if (settings(env).closeAfterImport && !mapping.closedBySync) await closeInConnectWise(env, ticket.id, mapping, result);
 }
 
-async function resolveInFreshservice(env, cwId, mapping, via, result) {
+async function resolveInFreshservice(env, cwId, mapping, result) {
   const label = escapeHtml(mapping.number || cwId);
-  const note = `<p>Resolved in ConnectWise RMM (ticket ${label}); synced by ${escapeHtml(via)}.</p>`;
+  const note = `<p>Resolved in ConnectWise RMM (ticket ${label}); synced by poll.</p>`;
   await fs.resolveTicket(env, mapping.fsId, note);
   await store.setMapping(env, cwId, { ...mapping, status: 'resolved', resolvedAt: new Date().toISOString() });
-  if (result) result.resolved++;
-  env.log.info(`Resolved Freshservice ticket ${mapping.fsId} (ConnectWise ${mapping.number || cwId}) via ${via}`);
+  result.resolved++;
+  env.log.info(`Resolved Freshservice ticket ${mapping.fsId} (ConnectWise ${mapping.number || cwId})`);
 }
 
 // Resolves the Freshservice ticket for a ConnectWise ticket found in a Closed-category status.
 async function resolveIfMapped(env, ticket, result) {
   const mapping = await store.getMapping(env, ticket.id);
   if (!mapping || mapping.status === 'resolved' || mapping.closedBySync) return;
-  await resolveInFreshservice(env, ticket.id, mapping, 'poll', result);
+  await resolveInFreshservice(env, ticket.id, mapping, result);
 }
 
 const newer = (a, b) => (b && (!a || b > a) ? b : a);
@@ -178,38 +178,4 @@ async function poll(env) {
   return result;
 }
 
-function webhookAuthorized(env, data, headers) {
-  const secret = env.iparams.webhook_secret;
-  if (!secret) return true;
-  const h = headers || {};
-  const supplied = h['x-webhook-secret'] || h['X-Webhook-Secret'] || (data && data.secret);
-  return supplied === secret;
-}
-
-async function handleResolvedEvent(env, cwId) {
-  if (!settings(env).resolveSync) return { ignored: 'resolve sync disabled' };
-  const mapping = await store.getMapping(env, cwId);
-  if (!mapping) return { ignored: `unknown ticket ${cwId}` };
-  if (mapping.closedBySync) return { ignored: 'closed by sync' };
-  if (mapping.status === 'resolved') return { ignored: 'already resolved' };
-  await resolveInFreshservice(env, cwId, mapping, 'webhook');
-  return { resolved: cwId };
-}
-
-async function handleCreatedEvent(env, event) {
-  const ticket = (await cw.getTicket(env, event.id)) || event.ticket;
-  const result = { imported: 0, closed: 0, resolved: 0, errors: [] };
-  await importOne(env, ticket, result);
-  return { imported: result.imported, closed: result.closed, errors: result.errors };
-}
-
-async function handleWebhook(env, data, headers) {
-  if (!webhookAuthorized(env, data, headers)) return { ignored: 'bad secret' };
-  const event = cw.parseWebhook(data);
-  if (!event.id) return { ignored: 'no ticket id' };
-  if (event.resolved) return await handleResolvedEvent(env, event.id);
-  if (event.created) return await handleCreatedEvent(env, event);
-  return { ignored: 'unhandled event' };
-}
-
-Object.assign(exports, { checkConnections, poll, importOne, handleWebhook, flag, TIME_BUDGET_MS });
+Object.assign(exports, { checkConnections, poll, importOne, flag, TIME_BUDGET_MS });

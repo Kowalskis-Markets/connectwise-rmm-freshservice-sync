@@ -49,9 +49,6 @@ exports = {
     const env = makeEnv(args);
     try {
       await sync.checkConnections(env);
-      // The Platform API has no ticket webhooks; polling is the sync mechanism. This URL is for
-      // anything else that can post ticket events to the app.
-      console.info(`External event URL: ${await generateTargetUrl()}`);
       await createSchedule(env.iparams);
       renderData();
     } catch (err) {
@@ -81,15 +78,6 @@ exports = {
       console.info(`ConnectWise poll: ${JSON.stringify(result)}`);
     } catch (err) {
       console.error(`ConnectWise poll failed: ${describeError(err)}`);
-    }
-  },
-
-  onExternalEventHandler: async function (args) {
-    try {
-      const result = await sync.handleWebhook(makeEnv(args), args.data, args.headers);
-      console.info(`ConnectWise webhook: ${JSON.stringify(result)}`);
-    } catch (err) {
-      console.error(`ConnectWise webhook failed: ${describeError(err)}`);
     }
   }
 };
